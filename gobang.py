@@ -20,14 +20,14 @@ class Gomoku:
         self.size=size
         self.board=np.zeros((size,size))
         self.depth=depth
-        self.evaluation={"0111110":10000000,"-11111-":10000000,"011111-":10000000,"-111110":10000000,
-        "011110":1000000,"01111-":100050,"-11110":100050,"-1111-":1,"0110110":100050,"011011-":100050,"-110110":100050,"-11011-":100050,"0101110":100050,"010111-":100050,"-101110":100050,"-10111-":100050,"0111010":100050,"011101-":100050,"-111010":100050,"-11101-":100050
-        ,"01110":100000,"0111-":10000,"-1110":10000,"-111-":1,"011010":100000,"01101-":10000,"-11010":10000,"-1101-":1,"010110":100000,"01011-":10000,"-10110":10000,"-1011-":1,
-        "0110":5000,'011-':1000,'-110':1000,"-11-":1,"01010":2000,"0101-":1000,"0101-":1000,"-101-":1,
-        "010":500,"01-":50,"-10":50,"-1-":1}
-        self.threatStates=set(["0-1-1-1-1-","--1-1-1-10","0-1-1-10","0-1-10-10","0-1-10-1-","--1-10-10","--1-10-1-","0-10-1-10","0-10-1-1-","--10-1-10","--10-1-1-"])
-        self.specialThreaten=set(["0-1-10-1-10","--1-10-1-10","0-1-10-1-1-","--1-10-1-1-","0-10-1-1-10","--10-1-1-10","--10-1-1-1-","0-10-1-1-1-","0-1-1-10-10"
-        ,"--1-1-10-10","0-1-1-10-1-","--1-1-10-1-"])
+        self.evaluation={"0111110":10000000,"x11111x":10000000,"011111x":10000000,"x111110":10000000,
+        "011110":1000000,"01111x":100050,"x11110":100050,"x1111x":1,"0110110":100050,"011011x":100050,"x110110":100050,"x11011x":100050,"0101110":100050,"010111x":100050,"x101110":100050,"x10111x":100050,"0111010":100050,"011101x":100050,"x111010":100050,"x11101x":100050
+        ,"01110":100000,"0111x":10000,"x1110":10000,"x111x":1,"011010":100000,"01101x":10000,"x11010":10000,"x1101x":1,"010110":100000,"01011x":10000,"x10110":10000,"x1011x":1,
+        "0110":5000,'011x':1000,'x110':1000,"x11x":1,"01010":2000,"0101x":1000,"x1010":1000,"x101x":1,
+        "010":500,"01x":50,"x10":50,"x1x":1}
+        self.threatStates=set(["0-1-1-1-1x","x-1-1-1-10","0-1-1-10","0-1-10-10","0-10-1-10"])
+        self.specialThreaten=set(["0-1-10-1-10","x-1-10-1-10","0-1-10-1-1x","x-1-10-1-1x","0-10-1-1-10","x-10-1-1-10","x-10-1-1-1x","0-10-1-1-1x","0-1-1-10-10"
+        ,"x-1-1-10-10","0-1-1-10-1x","x-1-1-10-1x"])
         self.ownMovesX=[]
         self.ownMovesY=[]
         self.opponentMovesX=[]
@@ -64,13 +64,19 @@ class Gomoku:
                     #horizontal
                     if((i,j)not in horizonViewed):
                         pattern,viewed=self.evaluate_direction(self.board,(i,j),0,1,HUMAN)
+                        print("horizontal",pattern)
                         if(pattern in self.threatStates):
                             x,y=i,j-1
-                            consecutive=(len(pattern)-2)/2
                             if(pattern[0]==0):
                                 return (x,y)
-                            else:
+                            elif(len(pattern)%2==0):
+                                consecutive=int((len(pattern)-2)/2)
                                 return (x,y+consecutive+1)
+                            else:
+                                x,y=i,j+1
+                                while(self.board[x,y]!=0):
+                                    y+=1
+                                return (x,y)
                         elif(pattern in self.specialThreaten):
                             x,y=i,j+1
                             while(self.board[x,y]!=0):
@@ -80,13 +86,19 @@ class Gomoku:
                     #vertical
                     if((i,j)not in verticalViewed):
                         pattern,viewed=self.evaluate_direction(self.board,(i,j),1,0,HUMAN)
+                        print("vertical",pattern)
                         if(pattern in self.threatStates):
                             x,y=i-1,j
-                            consecutive=(len(pattern-2))/2
                             if(pattern[0]==0):
                                 return (x,y)
-                            else:
+                            elif(len(pattern)%2==0):
+                                consecutive=int((len(pattern)-2)/2)
                                 return (x+consecutive+1,y)
+                            else:
+                                x,y=i+1,j
+                                while(self.board[x,y]!=0):
+                                    x+=1
+                                return (x,y)
                         elif(pattern in self.specialThreaten):
                             x,y=i+1,j
                             while(self.board[x,y]!=0):
@@ -96,13 +108,19 @@ class Gomoku:
                     #rightDiagonal
                     if((i,j)not in rightDiagonalViewed):
                         pattern,viewed=self.evaluate_direction(self.board,(i,j),1,1,HUMAN)
+                        print("rightdiagonal",pattern)
                         if(pattern in self.threatStates):
                             x,y=i-1,j-1
-                            consecutive=(len(pattern-2))/2
                             if(pattern[0]==0):
                                 return (x,y)
-                            else:
+                            elif(len(pattern)%2==0):
+                                consecutive=int((len(pattern)-2)/2)
                                 return (x+consecutive+1,y+consecutive+1)
+                            else:
+                                x,y=i+1,j+1
+                                while(self.board[x,y]!=0):
+                                    x,y=x+1,y+1
+                                return (x,y)
                         elif(pattern in self.specialThreaten):
                             x,y=i+1,j+1
                             while(self.board[x,y]!=0):
@@ -111,16 +129,22 @@ class Gomoku:
                         rightDiagonalViewed.update(viewed)
                     #leftDiagonal
                     if((i,j)not in leftDiagonalViewed):
+                        print("leftDiagonal",pattern)
                         pattern,viewed=self.evaluate_direction(self.board,(i,j),1,-1,HUMAN)
                         if(pattern in self.threatStates):
-                            x,y=i-1,y+1
-                            consecutive=(len(pattern-2))/2
+                            x,y=i-1,j+1
                             if(pattern[0]==0):
                                 return (x,y)
-                            else:
+                            elif(len(pattern)%2==0):
+                                consecutive=int((len(pattern)-2)/2)
                                 return (x+consecutive+1,y-consecutive-1)
+                            else:
+                                x,y=i+1,j-1
+                                while(self.board[x,y]!=0):
+                                    x,y=x+1,y-1
+                                return (x,y)
                         elif(pattern in self.specialThreaten):
-                            x,y=i+1,y-1
+                            x,y=i+1,j-1
                             while(self.board[x,y]!=0):
                                 x,y=x+1,y-1
                             return(x,y)
@@ -160,7 +184,7 @@ class Gomoku:
         for i in range(self.size):
             for j in range(self.size):
                 if(state[i,j]==0):
-                    cells.append([[i,j],math.sqrt((i-self.ownMean[0])**2+(j-self.ownMean[1])**2)+math.sqrt((i-self.opponentMean[0])**2+(j-self.opponentMean[1])**2)])
+                    cells.append([[i,j],math.sqrt((i-self.ownMean[0])**2+(j-self.ownMean[1])**2)])
         cells.sort(key=lambda x:x[1])
         return cells
 
@@ -172,10 +196,10 @@ class Gomoku:
         if(depth==0 or self.game_over(state) or len(state==0)==0):
             currScore=self.evaluate(state)
             return [-1,-1,currScore]
-        for cell in self.searching_space(state):
-            x,y=cell[0][0],cell[0][1]
+        for cell in self.empty_cell(state):
+            x,y=cell[0],cell[1]
             state[x][y]=player
-            score=minmax(state,depth-1,-player,alpha,beta)
+            score=self.minmax(state,depth-1,-player,alpha,beta)
             state[x][y]=0
             if(player==COMP):
                 if(score[2]>best[2]):
@@ -206,25 +230,26 @@ class Gomoku:
         if(self.allowed_move(state,i-row,j-col) and state[i-row,j-col]==0):
             pattern="0"+pattern
         else:
-            pattern="-"+pattern
+            pattern="x"+pattern
         i,j=i+row,j+col
         while(self.allowed_move(state,i,j) and state[i,j]!=-player and step<=5 and gap<2):
-            if(state[i,j]==0 and gap==1 ):
+            if(state[i,j]==0 and gap>=1 ):
                 break
-            elif(state[i,j]==player):
+            elif(state[i,j]==player and gap<=1):
                 viewed.add((i,j))
-            else:
+                pattern=pattern+str(player)
+            elif (state[i,j]==0 and gap==0):
                 gap+=1
-            pattern+=pattern+str(player)
+                pattern=pattern+str(0)
             i=i+row
             j=j+col
             step+=1
-        if(pattern[-1]!=0):
+        if(pattern[-1]!="0"):
             if(self.allowed_move(state,i,j) and state[i,j]==0):
                 pattern=pattern+"0"
             else:
-                pattern=pattern+"-"
-            return(pattern,viewed)
+                pattern=pattern+"x"
+        return(pattern,viewed)
         
     def evaluate(self,state):
         score=0
@@ -274,33 +299,55 @@ class Gomoku:
                 self.ownMean=(np.mean(np.array(self.ownMovesX)),np.mean(np.array(self.ownMovesY)))
                 self.opponentMean=(np.mean(np.array(self.opponentMovesX)),np.mean(np.array(self.opponentMovesY)))
                 move=self.minmax(self.board.copy(),self.depth,COMP,-math.inf,math.inf)
-                x,y=move[0]+1,move[1]+1
-        self.ownMoveX.append(x)
-        self.ownMovesY.append(y)
+                x,y=move[0],move[1]
+        x=int(x)
+        y=int(y)
         self.set_move(x,y,COMP)
+        self.ownMovesX.append(x)
+        self.ownMovesY.append(y)
         x,y=x+1,REVERSEMAP.get(y+1)
-        sys.stdout.write(y+str(x))
         print("Move played: "+y+str(x))
+        # sys.stdout.write(y+str(x))
+        return
     def human_turn(self):
         cellsLeft=self.empty_cell(self.board)
         if(len(cellsLeft)==0):
             return
         move=input()
         print("Move played: "+move)
-        col,row=MAP(move[0])-1,int(move[1])-1
-        if(self.set_move(col,row,HUMAN)):
+        col,row=MAP.get(move[0])-1,int(move[1])-1
+        if(self.set_move(row,col,HUMAN)):
             self.opponentMovesX.append(row)
             self.opponentMovesY.append(col)
             return
         else:
-            print("invalid position")
+            print("invalid position, please enter a new position");
             move=input()
-            col,row=MAP(move[0])-1,int(move[1])-1
-            if(not self.set_move(col,row,HUMAN)):
-                return
+            print("Move played: "+move)
+            col,row=MAP.get(move[0])-1,int(move[1])-1
+            if(not self.set_move(row,col,HUMAN)):
+                exit()
             self.opponentMovesX.append(row)
             self.opponentMovesY.append(col)
+            return
 def main():
-    
+    if(len(sys.argv)<=2):
+        print("need more argument")
+        exit()
+    else:
+        boardSize=int(sys.argv[2])
+        print(boardSize)
+        gomoku=Gomoku(boardSize,2)
+        if(len(sys.argv)==4):
+            compFirst=True
+        else:
+            compFirst=False
+    while(True):
+        if(compFirst):
+            gomoku.ai_turn()
+            compFirst=False
+        gomoku.human_turn()
+        gomoku.ai_turn()
 
 if __name__=="__main__":
+    main()

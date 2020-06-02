@@ -1,2 +1,3 @@
 #!/bin/bash
-python3gobang.py $@
+cd "${0%/*}"
+python3 gobang.py $@
