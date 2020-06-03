@@ -25,6 +25,11 @@ class Gomoku:
         ,"01110":100000,"0111x":10000,"x1110":10000,"x111x":1,"011010":100000,"01101x":10000,"x11010":10000,"x1101x":1,"010110":100000,"01011x":10000,"x10110":10000,"x1011x":1,
         "0110":5000,'011x':1000,'x110':1000,"x11x":1,"01010":2000,"0101x":1000,"x1010":1000,"x101x":1,
         "010":500,"01x":50,"x10":50,"x1x":1}
+        self.evalOppo={"0-1-1-1-1-10":10000000,"x-1-1-1-1-1x":10000000,"0-1-1-1-1-1x":10000000,"x-1-1-1-1-10":10000000,
+        "0-1-1-1-10":1000000,"0-1-1-1-1x":200000,"x-1-1-1-10":200000,"x-1-1-1-1x":1,"0-1-10-1-10":200000,"0-1-10-1-1x":200000,"x-1-10-1-10":200000,"x-1-10-1-1x":200000,"0-10-1-1-10":200000,"0-10-1-1-1x":200000,"x-10-1-1-10":200000,"x-10-1-1-1x":200000,"0-1-1-10-10":200000,"0-1-1-10-1x":200000,"x-1-1-10-10":200000,"x-1-1-10-1x":200000
+        ,"0-1-1-10":100000,"0-1-1-1x":10000,"x-1-1-10":10000,"x-1-1-1x":1,"0-1-10-10":100000,"0-1-10-1x":10000,"x-1-10-10":10000,"x-1-10-1x":1,"0-10-1-10":100000,"0-10-1-1x":10000,"x-10-1-10":10000,"x-10-1-1x":1,
+        "0-1-10":5000,'0-1-1x':1000,'x-1-10':1000,"x-1-1x":1,"0-10-10":2000,"0-10-1x":1000,"x-10-10":1000,"x-10-1x":1,
+        "0-10":500,"0-1x":50,"x-10":50,"x-1x":1}
         self.threatStates=set(["0-1-1-1-1x","x-1-1-1-10","0-1-1-10"])
         self.specialThreaten=set(["0-1-10-1-10","x-1-10-1-10","0-1-10-1-1x","x-1-10-1-1x","0-10-1-1-10","x-10-1-1-10","x-10-1-1-1x","0-10-1-1-1x","0-1-1-10-10"
         ,"x-1-1-10-10","0-1-1-10-1x","x-1-1-10-1x","0-1-10-10","0-10-1-10"])
@@ -155,8 +160,9 @@ class Gomoku:
         else:
             best=[-1,-1,math.inf]
         if(depth==0 or len(state==0)==0):
-            currScore=self.evaluate(state)
-            return [-1,-1,currScore]
+            compScore=self.evaluate(state,player)
+            humScore=self.evaluate(state,-player)
+            return [-1,-1,compScore-humScore]
         for cell in self.searching_space(state):
             x,y=cell[0][0],cell[0][1]
             state[x][y]=player
@@ -212,7 +218,7 @@ class Gomoku:
                 pattern=pattern+"x"
         return (pattern,viewed)
         
-    def evaluate(self,state):
+    def evaluate(self,state,player):
         score=0
         horizonViewed=set([])
         verticalViewed=set([])
@@ -221,31 +227,34 @@ class Gomoku:
 
         for i in range(self.size):
             for j in range(self.size):
-                if(state[i,j]==COMP):
+                if(state[i,j]==player):
                     #horizontal
                     if((i,j)not in horizonViewed):
-                        pattern,viewed=self.evaluate_direction(state,(i,j),0,1,COMP)
-                        score+=self.get_score(pattern)
+                        pattern,viewed=self.evaluate_direction(state,(i,j),0,1,player)
+                        score+=self.get_score(pattern,player)
                         horizonViewed.update(viewed)
                     #vertical
                     if((i,j)not in verticalViewed):
-                        pattern,viewed=self.evaluate_direction(state,(i,j),1,0,COMP)
-                        score+=self.get_score(pattern)
+                        pattern,viewed=self.evaluate_direction(state,(i,j),1,0,player)
+                        score+=self.get_score(pattern,player)
                         verticalViewed.update(viewed)
                     #rightDiagonal
                     if((i,j)not in rightDiagonalViewed):
-                        pattern,viewed=self.evaluate_direction(state,(i,j),1,1,COMP)
-                        score+=self.get_score(pattern)
+                        pattern,viewed=self.evaluate_direction(state,(i,j),1,1,player)
+                        score+=self.get_score(pattern,player)
                         rightDiagonalViewed.update(viewed)
                     #leftDiagonal
                     if((i,j)not in leftDiagonalViewed):
-                        pattern,viewed=self.evaluate_direction(state,(i,j),1,-1,COMP)
-                        score+=self.get_score(pattern)
+                        pattern,viewed=self.evaluate_direction(state,(i,j),1,-1,player)
+                        score+=self.get_score(pattern,player)
                         leftDiagonalViewed.update(viewed)
         return score
 
-    def get_score(self,pattern):
-        return self.evaluation.get(pattern,1)
+    def get_score(self,pattern,player):
+        if(player==COMP):
+            return self.evaluation.get(pattern,1)
+        else:
+            return self.evalOppo.get(pattern,1)
 
     def ai_turn(self):
         cellsLeft=self.empty_cell(self.board)
@@ -254,13 +263,14 @@ class Gomoku:
         if(len(cellsLeft)==self.size*self.size):
             x=self.size//2
             y=self.size//2
+        elif(len(cellsLeft)==1):
+            x=cellsLeft[0][0]
+            y=cellsLeft[0][1]
         else:
-            x,y=self.threat_detect()
-            if(x==None):
-                self.ownMean=(np.mean(np.array(self.ownMovesX)),np.mean(np.array(self.ownMovesY)))
-                self.opponentMean=(np.mean(np.array(self.opponentMovesX)),np.mean(np.array(self.opponentMovesY)))
-                move=self.minmax(self.board.copy(),self.depth,COMP,-math.inf,math.inf)
-                x,y=move[0],move[1]
+            self.ownMean=(np.mean(np.array(self.ownMovesX)),np.mean(np.array(self.ownMovesY)))
+            self.opponentMean=(np.mean(np.array(self.opponentMovesX)),np.mean(np.array(self.opponentMovesY)))
+            move=self.minmax(self.board.copy(),self.depth,COMP,-math.inf,math.inf)
+            x,y=move[0],move[1]
         x=int(x)
         y=int(y)
         self.set_move(x,y,COMP)
