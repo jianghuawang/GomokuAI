@@ -118,7 +118,60 @@ class Gomoku:
                             return(x,y)
                         leftDiagonalViewed.update(viewed)
         return (None,None)
-
+    def heuristic(self,state,x,y,player):
+        score=0
+        #horizontal
+        score+=self.heuristic_direction(state,x,y,player,0,1)
+        #vertical
+        score+=self.heuristic_direction(state,x,y,player,1,0)
+        #right diagonal
+        score+=self.heuristic_direction(state,x,y,player,1,1)
+        #left diagonal
+        score+=self.heuristic_direction(state,x,y,player,1,-1)
+        return score
+    def heuristic_direction(self,state,x,y,player,row,col):
+        gap=0
+        score=0
+        state[x,y]=player
+        pattern=str(player)
+        i,j=x-row,y-col
+        step=0
+        while(self.allowed_move(i,j) and step<5 and state[i,j]!=-player and gap<2):
+            if(state[i,j]==player):
+                pattern=str(player)+pattern
+            elif(state[i,j]==0 and gap>=1):
+                break
+            elif(state[i,j]==0 and gap==0):
+                pattern=str(0)+pattern
+                gap+=1
+            i,j=i-row,j-col
+            step+=1
+        if(pattern[0]=="0"):
+            gap=0
+        else:
+            if(self.allowed_move(i,j) and state[i,j]==0):
+                pattern=str(0)+pattern
+            else:
+                pattern="x"+pattern
+        i,j=x+row,y+col
+        step=0
+        while(self.allowed_move(i,j) and step<5 and state[i,j]!=-player and gap<2):
+            if(state[i,j]==player):
+                pattern=pattern+str(player)
+            elif (state[i,j]==0 and gap==0):
+                pattern=pattern+str(0)
+                gap+=1
+            elif (state[i,j]==0 and gap>=1):
+                break
+            i,j=i+row,j+col
+            step+=1
+        if(pattern[-1]!="0"):
+            if(self.allowed_move(i,j) and state[i,j]==0):
+                pattern+=str(0)
+            else:
+                pattern+="x"
+        state[x,y]=0
+        return self.get_score(pattern,player)
     def empty_cell(self,state):
         cells=[]
         for i in range(self.size):
@@ -145,13 +198,13 @@ class Gomoku:
         else:
             return False
 
-    def searching_space(self,state):
+    def searching_space(self,state,player):
         cells=[]
         for i in range(self.size):
             for j in range(self.size):
                 if(state[i,j]==0):
-                    cells.append([[i,j],math.sqrt((i-self.ownMean[0])**2+(j-self.ownMean[1])**2)])
-        cells.sort(key=lambda x:x[1])
+                    cells.append([[i,j],self.heuristic(state,i,j,player)])
+        cells.sort(key=lambda x:x[1],reverse=True)
         return cells
 
     def minmax(self,state,depth,player,alpha,beta):
@@ -163,7 +216,7 @@ class Gomoku:
             compScore=self.evaluate(state,player)
             humScore=self.evaluate(state,-player)
             return [-1,-1,compScore-humScore]
-        for cell in self.searching_space(state):
+        for cell in self.searching_space(state,player):
             x,y=cell[0][0],cell[0][1]
             state[x][y]=player
             score=self.minmax(state,depth-1,-player,alpha,beta)
