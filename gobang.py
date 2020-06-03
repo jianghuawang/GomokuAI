@@ -67,7 +67,7 @@ class Gomoku:
                         print("horizontal",pattern)
                         if(pattern in self.threatStates):
                             x,y=i,j-1
-                            if(pattern[0]==0):
+                            if(pattern[0]=="0"):
                                 return (x,y)
                             elif(len(pattern)%2==0):
                                 consecutive=int((len(pattern)-2)/2)
@@ -89,7 +89,7 @@ class Gomoku:
                         print("vertical",pattern)
                         if(pattern in self.threatStates):
                             x,y=i-1,j
-                            if(pattern[0]==0):
+                            if(pattern[0]=="0"):
                                 return (x,y)
                             elif(len(pattern)%2==0):
                                 consecutive=int((len(pattern)-2)/2)
@@ -111,7 +111,7 @@ class Gomoku:
                         print("rightdiagonal",pattern)
                         if(pattern in self.threatStates):
                             x,y=i-1,j-1
-                            if(pattern[0]==0):
+                            if(pattern[0]=="0"):
                                 return (x,y)
                             elif(len(pattern)%2==0):
                                 consecutive=int((len(pattern)-2)/2)
@@ -133,7 +133,7 @@ class Gomoku:
                         pattern,viewed=self.evaluate_direction(self.board,(i,j),1,-1,HUMAN)
                         if(pattern in self.threatStates):
                             x,y=i-1,j+1
-                            if(pattern[0]==0):
+                            if(pattern[0]=="0"):
                                 return (x,y)
                             elif(len(pattern)%2==0):
                                 consecutive=int((len(pattern)-2)/2)
@@ -298,7 +298,7 @@ class Gomoku:
             if(x==None):
                 self.ownMean=(np.mean(np.array(self.ownMovesX)),np.mean(np.array(self.ownMovesY)))
                 self.opponentMean=(np.mean(np.array(self.opponentMovesX)),np.mean(np.array(self.opponentMovesY)))
-                move=self.minmax(self.board.copy(),self.depth,COMP,-math.inf,math.inf)
+                move=self.minmax(self.board,self.depth,COMP,-math.inf,math.inf)
                 x,y=move[0],move[1]
         x=int(x)
         y=int(y)
