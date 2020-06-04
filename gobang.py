@@ -307,21 +307,24 @@ class Gomoku:
         elif(len(cellsLeft)==self.size*self.size):
             x=self.size//2
             y=self.size//2
+        elif(len(cellsLeft)==self.size*self.size-1):
+            x,y=self.size//2,self.size//2
+            if(not self.valid_move(self.board,x,y)):
+                x,y=x+2,y+2
         elif(len(cellsLeft)==1):
             x=cellsLeft[0][0]
             y=cellsLeft[0][1]
         elif(self.size>=24):
             x,y=self.threat_detect()
             if(x==None):
-                x,y=random.choice(cellsLeft)
+                move=self.searching_space(self.board.copy(),COMP)[0]
+                x,y=move[0][0],move[0][1]
         else:
             move=self.minmax(self.board.copy(),self.depth,COMP,-math.inf,math.inf)
             x,y=move[0],move[1]
         x=int(x)
         y=int(y)
         self.set_move(x,y,COMP)
-        self.ownMovesX.append(x)
-        self.ownMovesY.append(y)
         x,y=x+1,REVERSEMAP.get(y+1)
         print("Move played: "+y+str(x))
     def human_turn(self):
@@ -332,8 +335,6 @@ class Gomoku:
         print("Move played: "+move)
         col,row=MAP.get(move[0])-1,int(move[1:])-1
         if(self.set_move(row,col,HUMAN)):
-            self.opponentMovesX.append(row)
-            self.opponentMovesY.append(col)
             return
         else:
             print("invalid position, please enter a new position");
@@ -342,8 +343,6 @@ class Gomoku:
             col,row=MAP.get(move[0])-1,int(move[1:])-1
             if(not self.set_move(row,col,HUMAN)):
                 exit()
-            self.opponentMovesX.append(row)
-            self.opponentMovesY.append(col)
             return
 def main():
     if(len(sys.argv)<=2):
@@ -351,7 +350,6 @@ def main():
         exit()
     else:
         boardSize=int(sys.argv[2])
-        print(boardSize)
         gomoku=Gomoku(boardSize,2)
         if(len(sys.argv)==4):
             compFirst=True
