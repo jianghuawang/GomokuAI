@@ -1,11 +1,8 @@
 import math
 import random
-import platform
 import time
 import os
 import numpy as np
-import scipy
-import scipy.signal
 import sys
 
 HUMAN= -1
@@ -33,12 +30,6 @@ class Gomoku:
         self.threatStates=set(["0-1-1-1-1x","x-1-1-1-10","0-1-1-10"])
         self.specialThreaten=set(["0-1-10-1-10","x-1-10-1-10","0-1-10-1-1x","x-1-10-1-1x","0-10-1-1-10","x-10-1-1-10","x-10-1-1-1x","0-10-1-1-1x","0-1-1-10-10"
         ,"x-1-1-10-10","0-1-1-10-1x","x-1-1-10-1x","0-1-10-10","0-10-1-10"])
-        self.ownMovesX=[]
-        self.ownMovesY=[]
-        self.opponentMovesX=[]
-        self.opponentMovesY=[]
-        self.ownMean=None
-        self.opponentMean=None
 
     def threat_detect(self):
         horizonViewed=set([])
@@ -313,22 +304,27 @@ class Gomoku:
         cellsLeft=self.empty_cell(self.board)
         if(len(cellsLeft)==0):
             return
-        if(len(cellsLeft)==self.size*self.size):
+        elif(len(cellsLeft)==self.size*self.size):
             x=self.size//2
             y=self.size//2
+        elif(len(cellsLeft)==self.size*self.size-1):
+            x,y=self.size//2,self.size//2
+            if(not self.valid_move(self.board,x,y):
+                x,y=x+2,y+2
         elif(len(cellsLeft)==1):
             x=cellsLeft[0][0]
             y=cellsLeft[0][1]
+        elif(self.size>=24):
+            x,y=self.threat_detect()
+            if(x==None):
+                move=self.searching_space(self.board.copy(),COMP)[0]
+                x,y=move[0][0],move[0][1]
         else:
-            self.ownMean=(np.mean(np.array(self.ownMovesX)),np.mean(np.array(self.ownMovesY)))
-            self.opponentMean=(np.mean(np.array(self.opponentMovesX)),np.mean(np.array(self.opponentMovesY)))
             move=self.minmax(self.board.copy(),self.depth,COMP,-math.inf,math.inf)
             x,y=move[0],move[1]
         x=int(x)
         y=int(y)
         self.set_move(x,y,COMP)
-        self.ownMovesX.append(x)
-        self.ownMovesY.append(y)
         x,y=x+1,REVERSEMAP.get(y+1)
         print("Move played: "+y+str(x))
     def human_turn(self):
@@ -339,8 +335,6 @@ class Gomoku:
         print("Move played: "+move)
         col,row=MAP.get(move[0])-1,int(move[1:])-1
         if(self.set_move(row,col,HUMAN)):
-            self.opponentMovesX.append(row)
-            self.opponentMovesY.append(col)
             return
         else:
             print("invalid position, please enter a new position");
@@ -349,8 +343,6 @@ class Gomoku:
             col,row=MAP.get(move[0])-1,int(move[1:])-1
             if(not self.set_move(row,col,HUMAN)):
                 exit()
-            self.opponentMovesX.append(row)
-            self.opponentMovesY.append(col)
             return
 def main():
     if(len(sys.argv)<=2):
@@ -358,7 +350,6 @@ def main():
         exit()
     else:
         boardSize=int(sys.argv[2])
-        print(boardSize)
         gomoku=Gomoku(boardSize,2)
         if(len(sys.argv)==4):
             compFirst=True
